@@ -19,6 +19,11 @@ export async function safeParseJsonResponse<T = any>(response: Response): Promis
         'Không tìm thấy dịch vụ Backend API (/api). Nếu bạn đang triển khai trên Vercel, hãy đảm bảo đã cấu hình Serverless Functions (vercel.json) và cài đặt biến môi trường GEMINI_API_KEY trong Project Settings của Vercel.'
       );
     }
+    if (text.includes('FUNCTION_INVOCATION_FAILED')) {
+      throw new Error(
+        'Hàm Backend trên Vercel gặp sự cố (FUNCTION_INVOCATION_FAILED). Nguyên nhân phổ biến: Chưa cấu hình biến môi trường GEMINI_API_KEY trên Vercel. Bạn hãy vào Vercel Project Settings > Environment Variables để thêm GEMINI_API_KEY rồi Redeploy lại.'
+      );
+    }
     if (response.status === 504 || text.includes('FUNCTION_INVOCATION_TIMEOUT')) {
       throw new Error(
         'Máy chủ phản hồi quá thời gian quy định (Timeout). Vui lòng thử lại với yêu cầu ngắn gọn hơn.'
