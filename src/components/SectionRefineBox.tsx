@@ -13,6 +13,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { ProblemData } from '../types';
+import { safeParseJsonResponse } from '../utils/apiHelper';
 
 export interface SectionRefineBoxProps {
   sectionKey: 'description' | 'inputFormat' | 'outputFormat' | 'constraints' | 'sample';
@@ -59,7 +60,7 @@ export const SectionRefineBox: React.FC<SectionRefineBoxProps> = ({
         }),
       });
 
-      const data = await res.json();
+      const data = await safeParseJsonResponse(res);
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Không thể cập nhật mục này. Vui lòng thử lại.');

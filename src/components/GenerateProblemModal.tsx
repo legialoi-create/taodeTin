@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { CURRICULUM_TOPICS } from '../data/curriculum';
 import { TopicId, Difficulty, ProblemData } from '../types';
+import { safeParseJsonResponse } from '../utils/apiHelper';
 
 interface GenerateProblemModalProps {
   isOpen: boolean;
@@ -88,7 +89,7 @@ export const GenerateProblemModal: React.FC<GenerateProblemModalProps> = ({
         }),
       });
 
-      const data = await response.json();
+      const data = await safeParseJsonResponse(response);
 
       if (!response.ok || !data.success) {
         const errorMsg = data.error || 'Không thể tạo đề bài. Vui lòng thử lại.';
