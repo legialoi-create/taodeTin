@@ -22,6 +22,7 @@ import { GenerateProblemModal } from './components/GenerateProblemModal';
 import { HistoryDrawer } from './components/HistoryDrawer';
 import { generateThemisTestZip, downloadBlob } from './utils/zipGenerator';
 import { enrichAndEnforceSubtaskCompliance } from './utils/testValidator';
+import { safeParseJsonResponse } from './utils/apiHelper';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 
@@ -188,7 +189,7 @@ export default function App() {
             count: currentProblem.testCases?.length || 20,
           }),
         });
-        const data = await res.json();
+        const data = await safeParseJsonResponse(res);
         if (!res.ok || !data.success) {
           throw new Error(data.error || 'Lỗi sinh lại test.');
         }
