@@ -10,7 +10,24 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: "10mb" }));
+// Safe body parser for both standalone server and serverless environments (e.g. Vercel)
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === "object") {
+    return next();
+  }
+  express.json({ limit: "10mb" })(req, res, next);
+});
+
+// Middleware to normalize URL in case Vercel rewrote it
+app.use((req, _res, next) => {
+  const originalUrl =
+    (req.headers["x-matched-path"] as string) ||
+    (req.headers["x-invoke-path"] as string);
+  if (originalUrl && originalUrl.startsWith("/api")) {
+    req.url = originalUrl;
+  }
+  next();
+});
 
 // Candidate models for automatic fallback when one experiences 503 high demand
 const CANDIDATE_MODELS = [
@@ -23,7 +40,9 @@ const CANDIDATE_MODELS = [
 function getGeminiClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY chưa được cấu hình. Vui lòng kiểm tra tab Secrets trong AI Studio.");
+    throw new Error(
+      "MISSING_GEMINI_API_KEY: Chưa cài đặt biến môi trường GEMINI_API_KEY. Vui lòng vào Vercel Project Settings > Environment Variables để thêm GEMINI_API_KEY và Redeploy."
+    );
   }
   return new GoogleGenAI({
     apiKey,
@@ -112,7 +131,7 @@ function getOfflineFallback(topic: string, problemCode?: string): any {
 }
 
 // Health check
-app.get("/api/health", (_req, res) => {
+app.get(["/api/health", "/health"], (_req, res) => {
   res.json({
     status: "ok",
     hasApiKey: !!process.env.GEMINI_API_KEY,
@@ -122,7 +141,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 // API: Generate Problem + Solution + 20 Tests
-app.post("/api/generate-problem", async (req, res) => {
+app.post(["/api/generate-problem", "/generate-problem"], async (req, res) => {
   const {
     topic = "branching",
     topicName = "Cấu trúc rẽ nhánh",
@@ -310,7 +329,7 @@ Hãy trả về định dạng JSON khớp với schema quy định.`;
 });
 
 // API: Regenerate tests for an existing problem with strict subtask verification
-app.post("/api/generate-more-tests", async (req, res) => {
+app.post(["/api/generate-more-tests", "/generate-more-tests"], async (req, res) => {
   const { problem, count = 20 } = req.body;
   if (!problem || !problem.solutionCpp) {
     return res.status(400).json({ success: false, error: "Thiếu thông tin bài toán hoặc mã nguồn." });
@@ -395,7 +414,7 @@ Bao gồm từ test01 đến test${count < 10 ? "0" + count : count}.`;
 });
 
 // API: Validate problem test cases against subtask constraints & specifications
-app.post("/api/validate-problem-tests", (req, res) => {
+app.post(["/api/validate-problem-tests", "/validate-problem-tests"], (req, res) => {
   const { problem } = req.body;
   if (!problem) {
     return res.status(400).json({ success: false, error: "Thiếu dữ liệu bài toán để thẩm định." });
@@ -419,7 +438,7 @@ app.post("/api/validate-problem-tests", (req, res) => {
 
 // API: Refine a specific section (1. Đặt vấn đề, 2. Dữ liệu vào, 3. Dữ liệu ra, 4. Ràng buộc, 5. Ví dụ)
 // and automatically regenerate the matching 20 test cases
-app.post("/api/refine-problem-section", async (req, res) => {
+app.post(["/api/refine-problem-section", "/refine-problem-section"], async (req, res) => {
   const { problem, sectionKey, sectionTitle, userPrompt } = req.body;
 
   if (!problem || !userPrompt) {
