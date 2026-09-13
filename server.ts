@@ -615,4 +615,9 @@ async function setupVite() {
   });
 }
 
-setupVite();
+// In local or container runtime, start server. On Vercel, it is handled as a serverless function.
+if (!process.env.VERCEL) {
+  setupVite();
+}
+
+export default app;
