@@ -21,7 +21,7 @@ export async function safeParseJsonResponse<T = any>(response: Response): Promis
     }
     if (text.includes('FUNCTION_INVOCATION_FAILED')) {
       throw new Error(
-        'Hàm Backend trên Vercel gặp sự cố (FUNCTION_INVOCATION_FAILED). Nguyên nhân phổ biến: Chưa cấu hình biến môi trường GEMINI_API_KEY trên Vercel. Bạn hãy vào Vercel Project Settings > Environment Variables để thêm GEMINI_API_KEY rồi Redeploy lại.'
+        'Hàm Backend trên Vercel gặp sự cố (FUNCTION_INVOCATION_FAILED). Nguyên nhân 1: Chưa cấu hình GEMINI_API_KEY. Nguyên nhân 2: Code trên Vercel là bản cũ (chưa cấu hình vùng sin1). Vui lòng cập nhật code mới nhất lên GitHub và Deploy lại.'
       );
     }
     if (response.status === 504 || text.includes('FUNCTION_INVOCATION_TIMEOUT')) {
